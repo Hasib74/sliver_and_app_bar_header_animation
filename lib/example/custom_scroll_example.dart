@@ -406,7 +406,87 @@ class _ComplexNestedScrollViewState extends State<ComplexNestedScrollView>
     );
   }
 
-  Positioned rotted_buttons(double expandedHeight, double clampedScale,
+  rotted_buttons(double expandedHeight, double clampedScale,
+      BuildContext context, double clamp) {
+    clampedScale = clamp;
+    return Positioned(
+        top: (expandedHeight - 18) - ((1 - clamp) * (expandedHeight - 80) + 2),
+        // right: (MediaQuery.of(context).size.width * 0.16) +
+        //     (clamp * MediaQuery.of(context).size.width * 0.56 +
+        //         (1 - clamp) * 60),
+
+        left: (MediaQuery.of(context).size.width * 0.18) +
+            ((1 - clamp) * MediaQuery.of(context).size.width * 0.43),
+        right: 0,
+
+        // right: 100,
+        // left: 0,
+        child: Container(
+          ///  color: Colors.red,
+          child: Stack(
+            alignment: Alignment.bottomLeft,
+            children: profileIcons
+                .take(profileIcons.length)
+                .toList()
+                .asMap()
+                .entries
+                .map((entry) {
+              int index = entry.key;
+              IconData element = entry.value;
+
+              // Calculate spacing for horizontal layout
+              var offsetX, offsetY, angle;
+
+              angle = (2 * pi / profileIcons.length) * index +
+                  1 -
+                  (clampedScale * pi * 2);
+
+              var space = clamp < 0.5 ? 35 : 75;
+
+              offsetX = lerpDouble(
+                  roundCircleRadius * cos(angle), // Circular X
+                  index * space, // Horizontal X
+                  clamp > 0.5
+                      ? (pow(clamp, 5)).toDouble()
+                      : pow(1 - clamp, 5).toDouble());
+
+              offsetY = lerpDouble(
+                  roundCircleRadius * sin(angle) -
+                      ((roundCircleRadius * sin(angle)) *
+                          (clamp > 0.5
+                              ? (pow(clamp, 5))
+                              : pow(1 - clamp, 5))), // Circular Y
+                  1, // Horizontal Y
+                  clamp);
+
+              return Transform.translate(
+                filterQuality: FilterQuality.low,
+                offset:
+                    Offset(offsetX, double.parse(offsetY.toStringAsFixed(2))),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  // Ensure gesture detection
+                  onTap: () {
+                    print("G-> Icon $index clicked");
+                  },
+                  child: Container(
+                    // Make the container transparent
+                    child: iconBackground(
+                        index: index,
+                        clampedOpacity: 1,
+                        icon: Icon(element),
+                        size: clamp < 0.5
+                            ? lerpDouble(25, 10, (1 - clamp))
+                            : lerpDouble(10, 25, clamp)),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ));
+  }
+
+  Positioned rotted_buttonsV2(double expandedHeight, double clampedScale,
       BuildContext context, double clamp) {
     clampedScale = clamp;
     return Positioned(
@@ -436,7 +516,8 @@ class _ComplexNestedScrollViewState extends State<ComplexNestedScrollView>
 
                 var offsetX, offsetY, angle;
 
-                angle = (2 * pi / profileIcons.length) * index+1 -
+                angle = (2 * pi / profileIcons.length) * index +
+                    1 -
                     (clampedScale * pi * 2);
                 ;
 
@@ -478,17 +559,28 @@ class _ComplexNestedScrollViewState extends State<ComplexNestedScrollView>
                       "index: $index  offsetX: $offsetX offsetY: $offsetY angle: $angle clamp: $clamp ");
                 }
 
-                return Opacity(
-                  opacity: 1,
-                  child: Transform.translate(
-                    offset: Offset(
-                        offsetX, double.parse(offsetY.toStringAsFixed(2))),
-                    child: iconBackground(
-                        clampedOpacity: 1,
-                        icon: Icon(element),
-                        size: clamp < 0.5
-                            ? lerpDouble(25, 10, (1 - clamp))
-                            : lerpDouble(10, 25, clamp)),
+                return Transform.translate(
+                  filterQuality: FilterQuality.low,
+                  offset:
+                      Offset(offsetX, double.parse(offsetY.toStringAsFixed(2))),
+                  child: Container(
+                    color: Colors.amber,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      // Ensure gesture detection
+
+                      onTap: () {
+                        print("G->");
+                      },
+
+                      child: iconBackground(
+                          index: index,
+                          clampedOpacity: 1,
+                          icon: Icon(element),
+                          size: clamp < 0.5
+                              ? lerpDouble(25, 10, (1 - clamp))
+                              : lerpDouble(10, 25, clamp)),
+                    ),
                   ),
                 );
               }).toList(),
@@ -497,16 +589,25 @@ class _ComplexNestedScrollViewState extends State<ComplexNestedScrollView>
         ));
   }
 
-  iconBackground({Icon? icon, required double clampedOpacity, double? size}) {
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
+  iconBackground(
+      {Icon? icon,
+      required double clampedOpacity,
+      double? size,
+      required int index}) {
+    return InkWell(
+      onTap: () {
+        print("Fk index: ${index}");
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8.0),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+        ),
+        child: Icon(icon!.icon,
+            size: size ?? 30,
+            color: clampedOpacity == 1.0 ? Colors.black : Colors.white),
       ),
-      child: Icon(icon!.icon,
-          size: size ?? 30,
-          color: clampedOpacity == 1.0 ? Colors.black : Colors.white),
     );
   }
 }
